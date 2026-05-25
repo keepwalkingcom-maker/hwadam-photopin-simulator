@@ -1,0 +1,492 @@
+<!-- Created: 2026-05-26 00:22 KST -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hwadam PhotoPin Flow Simulator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070b;
+      --panel: #111827;
+      --panel-2: #0b1220;
+      --ink: #f8fafc;
+      --muted: #a8b3c5;
+      --line: #263244;
+      --soft: #172033;
+      --customer: #0f766e;
+      --app: #2563eb;
+      --backend: #7c3aed;
+      --ready: #86efac;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    main {
+      width: min(1360px, calc(100% - 32px));
+      margin: 28px auto 42px;
+      display: grid;
+      gap: 18px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 30px; line-height: 1.2; }
+    h2 { font-size: 20px; }
+    p { color: var(--muted); line-height: 1.5; }
+    button, input, select {
+      font: inherit;
+      border-radius: 8px;
+    }
+    button {
+      min-height: 44px;
+      border: 0;
+      padding: 0 16px;
+      color: #fff;
+      background: var(--customer);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: var(--app); }
+    input, select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      padding: 0 12px;
+      color: var(--ink);
+      background: var(--panel-2);
+    }
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    section, details {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+    details { padding: 0; overflow: hidden; }
+    summary {
+      cursor: pointer;
+      padding: 14px 18px;
+      font-weight: 800;
+    }
+    pre {
+      margin: 0;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      color: #dbeafe;
+      background: #070d18;
+    }
+    .top-status {
+      min-width: 240px;
+      padding: 13px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      text-align: center;
+      font-weight: 800;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .flow-step {
+      min-height: 76px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--soft);
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+    .flow-step strong { font-size: 13px; }
+    .flow-step span { font-size: 12px; color: var(--muted); }
+    .flow-step.active {
+      border-color: #60a5fa;
+      background: #10254a;
+      box-shadow: 0 0 0 2px rgba(96,165,250,.2);
+    }
+    .flow-step.done {
+      border-color: #34d399;
+      background: #0c2d25;
+    }
+    .flow-step.failed {
+      border-color: var(--danger);
+      background: #3a121a;
+    }
+    .actors {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .actor {
+      min-height: 330px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      overflow: hidden;
+    }
+    .actor header {
+      display: block;
+      padding: 14px 16px;
+      color: #fff;
+    }
+    .customer-panel header { background: var(--customer); }
+    .developer-panel header { background: var(--app); }
+    .backend-panel header { background: var(--backend); }
+    .actor-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .state-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #0f172a;
+    }
+    .state-card strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .pill {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .pill.ready { background: #123524; color: var(--ready); }
+    .pill.warn { background: #3b2b0d; color: var(--warn); }
+    .pill.error { background: #3a121a; color: var(--danger); }
+    .images {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .image-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0b1220;
+      padding: 10px;
+      min-height: 74px;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+    .timeline {
+      display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+    }
+    .event {
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #0b1220;
+      font-size: 13px;
+    }
+    .event code {
+      color: #93c5fd;
+      font-weight: 700;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    @media (max-width: 1100px) {
+      header, .controls, .actors { grid-template-columns: 1fr; }
+      .flow-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>화담숲 PhotoPin 통합 흐름 시뮬레이터</h1>
+        <p>고객, 개발사 앱, 우리 백엔드/촬영 시스템 사이에서 지금 어떤 정보가 이동하는지 보여주는 공유용 화면</p>
+      </div>
+      <div class="top-status" id="status">대기</div>
+    </header>
+
+    <section>
+      <div class="controls">
+        <label>포토존 ID<input id="zoneId" value="moss-garden-01"></label>
+        <label>Client UUID<input id="clientUuid" value="stage1-demo-client"></label>
+        <label>시나리오
+          <select id="scenario">
+            <option value="normal">정상 흐름</option>
+            <option value="busy">촬영중 중복 QR</option>
+            <option value="unavailable">장비 오류</option>
+          </select>
+        </label>
+        <button id="startFlow">QR 스캔 시뮬레이션 시작</button>
+      </div>
+      <p class="note">이 화면은 정적 공유용이며 실제 고객자료나 실제 API를 호출하지 않습니다. payload/response는 더미 데이터입니다.</p>
+    </section>
+
+    <section>
+      <div class="flow-strip" id="flowStrip">
+        <div class="flow-step" data-step="scan"><strong>1. 고객 QR 스캔</strong><span>더미 스캔 버튼</span></div>
+        <div class="flow-step" data-step="uuid"><strong>2. 개발사 앱</strong><span>client_uuid 확인</span></div>
+        <div class="flow-step" data-step="session"><strong>3. 우리 서버</strong><span>session_id / 15초 lock</span></div>
+        <div class="flow-step" data-step="countdown"><strong>4. 고객 폰</strong><span>15초 카운트다운</span></div>
+        <div class="flow-step" data-step="capture"><strong>5. 촬영</strong><span>2장 촬영 명령</span></div>
+        <div class="flow-step" data-step="preview"><strong>6. preview 전달</strong><span>촬영 확인 이미지</span></div>
+        <div class="flow-step" data-step="final"><strong>7. final 전달</strong><span>보정본 준비</span></div>
+        <div class="flow-step" data-step="done"><strong>8. 고객 확인</strong><span>다운로드 가능</span></div>
+      </div>
+    </section>
+
+    <section class="actors">
+      <article class="actor customer-panel" id="customer-panel">
+        <header><h2>고객 스마트폰</h2></header>
+        <div class="actor-body">
+          <div class="state-card"><strong>현재 화면</strong><p id="customerState">고객이 QR 스캔을 준비</p></div>
+          <div class="state-card"><strong>고객에게 보이는 결과</strong><div class="images" id="customerImages"></div></div>
+        </div>
+      </article>
+      <article class="actor developer-panel" id="developer-panel">
+        <header><h2>개발사 앱</h2></header>
+        <div class="actor-body">
+          <div class="state-card"><strong>앱이 가지고 있는 정보</strong><p id="appState">client_uuid 대기</p></div>
+          <div class="state-card"><strong>우리 서버와 주고받는 정보</strong><p id="appTransfer">API 호출 전</p></div>
+        </div>
+      </article>
+      <article class="actor backend-panel" id="backend-panel">
+        <header><h2>우리 백엔드 / 촬영 시스템</h2></header>
+        <div class="actor-body">
+          <div class="state-card"><strong>서버 상태</strong><p id="backendState">session 생성 전</p></div>
+          <div class="state-card"><strong>촬영 / 보정 상태</strong><p id="captureState">더미 촬영 대기</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <h2>이벤트 타임라인</h2>
+      <div class="timeline" id="eventTimeline"></div>
+    </section>
+
+    <details open>
+      <summary>개발자 디버그 패널</summary>
+      <pre id="developerDebug">{}</pre>
+    </details>
+  </main>
+
+  <script>
+    const labels = {
+      waiting: "대기",
+      scanning: "QR 스캔 진행",
+      session: "세션 생성",
+      countdown: "15초 카운트다운",
+      preview: "미리보기 전달",
+      final: "최종본 전달",
+      done: "완료",
+      error: "오류"
+    };
+    const state = { sessionId: "", debug: {}, events: [] };
+    const steps = ["scan", "uuid", "session", "countdown", "capture", "preview", "final", "done"];
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("status");
+      el.textContent = text;
+      el.className = isError ? "top-status error" : "top-status";
+    }
+    function setStep(activeStep, failed = false) {
+      const activeIndex = steps.indexOf(activeStep);
+      document.querySelectorAll(".flow-step").forEach((el) => {
+        const index = steps.indexOf(el.dataset.step);
+        el.classList.toggle("active", index === activeIndex && !failed);
+        el.classList.toggle("failed", index === activeIndex && failed);
+        el.classList.toggle("done", activeIndex >= 0 && index < activeIndex);
+      });
+    }
+    function setText(id, text) { document.getElementById(id).textContent = text; }
+    function renderDebug() { document.getElementById("developerDebug").textContent = JSON.stringify(state.debug, null, 2); }
+    function renderTimeline() {
+      const target = document.getElementById("eventTimeline");
+      target.innerHTML = "";
+      for (const event of state.events) {
+        const row = document.createElement("div");
+        row.className = "event";
+        row.innerHTML = `<code>${event.time}</code><div><strong>${event.actor}</strong><br>${event.message}</div>`;
+        target.appendChild(row);
+      }
+    }
+    function addEvent(actor, message, data) {
+      state.events.unshift({ time: new Date().toLocaleTimeString(), actor, message, data });
+      renderTimeline();
+      if (data) {
+        state.debug[`${actor} - ${message}`] = data;
+        renderDebug();
+      }
+    }
+    function renderImages(targetId, images, label) {
+      const target = document.getElementById(targetId);
+      target.innerHTML = "";
+      for (const image of images) {
+        const card = document.createElement("div");
+        card.className = "image-card";
+        card.innerHTML = `<span class="pill ready">${label} #${image.shot_index}</span><br>${image.url}`;
+        target.appendChild(card);
+      }
+    }
+    function resetFlow() {
+      state.sessionId = "";
+      state.debug = {};
+      state.events = [];
+      renderDebug();
+      renderTimeline();
+      document.getElementById("customerImages").innerHTML = "";
+      setText("customerState", "고객이 QR 스캔을 준비");
+      setText("appState", "client_uuid 대기");
+      setText("appTransfer", "API 호출 전");
+      setText("backendState", "session 생성 전");
+      setText("captureState", "더미 촬영 대기");
+    }
+    function makeSession(zoneId, clientUuid) {
+      return {
+        session_id: `ps_demo_${Math.random().toString(16).slice(2, 10)}`,
+        client_uuid: clientUuid,
+        zone_id: zoneId,
+        status: "preview_ready",
+        locked_until: new Date(Date.now() + 15000).toISOString(),
+        countdown_seconds: 15,
+        preview_status: "ready",
+        result_status: "ready"
+      };
+    }
+    function makeImages(sessionId, kind) {
+      return {
+        session_id: sessionId,
+        status: "ready",
+        images: [1, 2].map((shot) => ({
+          kind,
+          shot_index: shot,
+          url: `dummy-storage/photo-zones/moss-garden-01/sessions/${sessionId}/${kind}s/shot_${shot}.jpg`
+        }))
+      };
+    }
+    async function runFlow() {
+      resetFlow();
+      const scenario = document.getElementById("scenario").value;
+      const clientUuid = document.getElementById("clientUuid").value;
+      const zoneId = document.getElementById("zoneId").value;
+
+      setStatus(labels.scanning);
+      setStep("scan");
+      setText("customerState", "고객이 현장 QR을 스캔");
+      addEvent("고객", "QR 스캔 버튼 입력");
+      await sleep(350);
+
+      setStep("uuid");
+      setText("appState", `client_uuid=${clientUuid}, zone_id=${zoneId}`);
+      addEvent("개발사 앱", "client_uuid / zone_id 확인", { client_uuid: clientUuid, zone_id: zoneId });
+      await sleep(350);
+
+      setStatus(labels.session);
+      setStep("session");
+      const payload = { zone_id: zoneId, client_uuid: clientUuid };
+      setText("appTransfer", "우리 서버로 POST /api/v1/photo-sessions 호출");
+      addEvent("개발사 앱 -> 우리 서버", "촬영 세션 생성 요청", payload);
+      await sleep(350);
+
+      if (scenario === "busy") {
+        const busy = { error_code: "ZONE_BUSY", message: "지금은 촬영중이니 잠시 후 다시 시도해 주세요.", locked_until: new Date(Date.now() + 9000).toISOString() };
+        setStatus(labels.error, true);
+        setStep("session", true);
+        setText("backendState", "같은 포토존에 active lock 존재");
+        setText("appTransfer", "개발사 앱이 busy 안내 수신");
+        addEvent("우리 서버 -> 개발사 앱 -> 고객", "중복 QR busy 응답", busy);
+        return;
+      }
+      if (scenario === "unavailable") {
+        const unavailable = { error_code: "ZONE_UNAVAILABLE", message: "문제가 발생해서 지금은 사용할 수 없습니다." };
+        setStatus(labels.error, true);
+        setStep("session", true);
+        setText("backendState", "장비 heartbeat 비정상");
+        setText("appTransfer", "개발사 앱이 unavailable 안내 수신");
+        addEvent("우리 서버 -> 개발사 앱 -> 고객", "장비 오류 응답", unavailable);
+        return;
+      }
+
+      const session = makeSession(zoneId, clientUuid);
+      state.sessionId = session.session_id;
+      setText("backendState", `session_id=${session.session_id}, 15초 lock, status=${session.status}`);
+      addEvent("우리 서버 -> 개발사 앱", "session_id / countdown_seconds / locked_until 응답", session);
+      await sleep(350);
+
+      setStatus(labels.countdown);
+      setStep("countdown");
+      setText("customerState", `카메라를 봐주세요. ${session.countdown_seconds}초 후 촬영`);
+      addEvent("개발사 앱 -> 고객", "15초 카운트다운 표시");
+      await sleep(500);
+
+      setStep("capture");
+      setText("captureState", "더미 촬영 시스템이 2장 촬영 결과 생성");
+      addEvent("우리 백엔드 / 촬영 시스템", "2장 촬영 명령 완료");
+      await sleep(350);
+
+      setStatus(labels.preview);
+      setStep("preview");
+      const preview = makeImages(session.session_id, "preview");
+      setText("appTransfer", "개발사 앱이 preview 2장 수신");
+      renderImages("customerImages", preview.images, "preview");
+      addEvent("우리 서버 -> 개발사 앱 -> 고객", "촬영 확인용 preview 2장 전달", preview);
+      await sleep(350);
+
+      setStatus(labels.final);
+      setStep("final");
+      const results = makeImages(session.session_id, "final");
+      renderImages("customerImages", results.images, "final");
+      setText("customerState", "최종 보정본 2장 확인 / 다운로드 가능");
+      addEvent("우리 서버 -> 개발사 앱 -> 고객", "최종 보정본 2장 전달", results);
+      await sleep(250);
+
+      setStatus(labels.done);
+      setStep("done");
+      addEvent("전체 흐름", "정상 완료");
+    }
+    document.getElementById("startFlow").addEventListener("click", runFlow);
+    setStatus(labels.waiting);
+    setStep("");
+    renderDebug();
+  </script>
+</body>
+</html>

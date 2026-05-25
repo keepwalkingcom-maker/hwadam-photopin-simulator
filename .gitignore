@@ -1,0 +1,22 @@
+# Created: 2026-05-26 00:22 KST
+.netlify/
+node_modules/
+dist/
+build/
+.env
+.env.*
+*.log
+*.aac
+*.mp3
+*.wav
+*.xlsx
+*.pptx
+*.docx
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+!assets/*.svg
+!assets/*.webp
