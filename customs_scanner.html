@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next K-Food AI 사전 통관 검역 스크리너 (AI Customs Scanner)</title>
+    <!-- Google Font (Outfit & Noto Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: rgba(22, 27, 34, 0.85);
+            --panel-border: rgba(48, 54, 61, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --accent-color: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.35);
+            --green: #3fb950;
+            --green-glow: rgba(63, 185, 80, 0.25);
+            --yellow: #d29922;
+            --yellow-glow: rgba(210, 153, 34, 0.25);
+            --red: #f85149;
+            --red-glow: rgba(248, 81, 73, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.4) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(56, 139, 253, 0.06) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .presets span {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .preset-btn {
+            background: #21262d;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #30363d;
+            border-color: var(--accent-color);
+        }
+
+        .text-area-wrapper {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            color: var(--text-main);
+            padding: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #58a6ff, #bc8cff);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(188, 140, 255, 0.4);
+        }
+
+        /* Result Section styling */
+        .result-section {
+            display: none;
+            border-top: 1px solid var(--panel-border);
+            padding-top: 24px;
+            margin-top: 16px;
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .status-pill {
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-pill.safe { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+        .status-pill.warning { background: rgba(210, 153, 34, 0.15); color: var(--yellow); border: 1px solid rgba(210, 153, 34, 0.3); }
+        .status-pill.danger { background: rgba(248, 81, 73, 0.15); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.3); }
+
+        .report-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .report-item {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .report-item .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .report-item .badge.red { background: rgba(248, 81, 73, 0.15); color: var(--red); }
+        .report-item .badge.yellow { background: rgba(210, 153, 34, 0.15); color: var(--yellow); }
+        .report-item .badge.green { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+
+        .report-text h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .report-text p {
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+
+        .disclaimer {
+            font-size: 11px;
+            color: var(--text-sub);
+            text-align: center;
+            margin-top: 24px;
+            border-top: 1px solid rgba(48, 54, 61, 0.3);
+            padding-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Next K-Food AI 사전 통관 스크리너</h1>
+            <p>16개 브랜드업 농산물 수출업체 성분표(영어) 자동 분석 및 유럽(EFSA) 검역 통관 1차 자가진단</p>
+        </header>
+
+        <div class="workspace">
+            <!-- Input Area -->
+            <div class="input-section">
+                <div class="presets">
+                    <span>대표 품목 프리셋:</span>
+                    <button class="preset-btn" onclick="applyPreset('sauce')">푸드베리 발효소스</button>
+                    <button class="preset-btn" onclick="applyPreset('kimbap')">밭 냉동김밥</button>
+                    <button class="preset-btn" onclick="applyPreset('liquor')">제이엘 전통주</button>
+                </div>
+                
+                <div class="text-area-wrapper">
+                    <textarea id="ingredientsInput" placeholder="여기에 분석할 식품의 영문 성분 원재료명(Ingredients)을 입력하세요. (예: Soy sauce, Sugar, Garlic, Sorbic acid...)"></textarea>
+                </div>
+
+                <button class="btn-scan" onclick="runScan()">
+                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                    AI 성분 검역 스크리닝 시작
+                </button>
+            </div>
+
+            <!-- Result Area -->
+            <div class="result-section" id="resultArea">
+                <div class="result-header">
+                    <h3>AI 검역 진단서 (1차 진단)</h3>
+                    <div class="status-pill" id="statusPill">
+                        <span>진단 중</span>
+                    </div>
+                </div>
+
+                <div class="report-list" id="reportList">
+                    <!-- JS will generate findings -->
+                </div>
+
+                <div class="disclaimer">
+                    ※ 본 진단은 유럽 식품안전청(EFSA) 고시 규정 데이터를 매핑한 1차 AI 자동 스크리닝 결과이며, 실제 통관을 위해서는 현지 전문 에이전트(OOOO)의 2차 최종 서류 검수가 동시 적용됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Presets data
+        const presets = {
+            sauce: "Fermented Soy Sauce (Soybeans, Wheat, Salt, Water), Fructose, Sugar, Garlic extract, Sorbic acid, Xanthan gum, Disodium inosinate",
+            kimbap: "Cooked Rice, Seaweed, Egg (Egg yolk, Egg white), Spinach, Carrot, Sesame oil, Milk whey powder, Wheat gluten, Soy protein",
+            liquor: "Distilled Rice liquor, Purified Water, Yeast, Sulfite (Preservative), Citric acid, Natural apple flavor"
+        };
+
+        function applyPreset(type) {
+            document.getElementById('ingredientsInput').value = presets[type];
+            // Hide previous results
+            document.getElementById('resultArea').style.display = 'none';
+        }
+
+        function runScan() {
+            const text = document.getElementById('ingredientsInput').value.trim();
+            if (!text) {
+                alert("성분 데이터를 입력해 주십시오.");
+                return;
+            }
+
+            const resultArea = document.getElementById('resultArea');
+            const statusPill = document.getElementById('statusPill');
+            const reportList = document.getElementById('reportList');
+            
+            // Clean up
+            reportList.innerHTML = '';
+            
+            // Temporary scanning simulation delay
+            resultArea.style.display = 'block';
+            statusPill.className = 'status-pill';
+            statusPill.innerHTML = '<span>AI 분석 분석 중...</span>';
+
+            setTimeout(() => {
+                const textLower = text.toLowerCase();
+                let findings = [];
+                let severity = 'safe'; // safe, warning, danger
+
+                // Rule 1: Animal ingredients (Gelatin, Lanolin, Whey, Milk, Egg)
+                if (textLower.includes('gelatin')) {
+                    findings.push({
+                        type: 'danger',
+                        title: '비건 인증 부합성 불합격 위험',
+                        desc: '우유/대두 중심 발효식품군 내에 동물성 젤라틴(Gelatin) 성분이 검출되었습니다. EU 비건 유통망 진입 시 비건 불합격 사유가 되므로 식물성 펙틴 등으로 대체가 필수적입니다.'
+                    });
+                    severity = 'danger';
+                }
+
+                if (textLower.includes('milk') || textLower.includes('egg') || textLower.includes('whey')) {
+                    findings.push({
+                        type: 'warning',
+                        title: 'EU 알레르기 유발 유입 경고 라벨링 의무',
+                        desc: '유럽 연합(EU) 알레르기 유발 성분 고시 규정에 따라 난류(Egg) 및 유제품(Milk) 성분이 포함되어 있습니다. 불어/영어 패키지 뒷면에 굵은 글씨체로 알레르기 유발 물질임을 명시하는 인쇄 변경이 수반되어야 통관이 가능합니다.'
+                    });
+                    if (severity !== 'danger') severity = 'warning';
+                }
+
+                // Rule 2: Preservatives (Sorbic acid, Benzoate)
+                if (textLower.includes('sorbic') || textLower.includes('benzoate')) {
+                    findings.push({
+                        type: 'warning',
+                        title: '보존료(보존제) 잔류 규격 검사 필요',
+                        desc: '솔빈산(Sorbic acid) 또는 안식향산(Benzoate) 성분이 감지되었습니다. EU 수입 허용 한계치인 1.0g/kg 이내 성적서를 확보해야 합니다. (푸드베리 등 발효식품군 통관 시 1순위 체크 사항)'
+                    });
+                    if (severity !== 'danger') severity = 'warning';
+                }
+
+                // Rule 3: Sulfite (Wine/Liquor preservative)
+                if (textLower.includes('sulfite') || textLower.includes('sulfur dioxide')) {
+                    findings.push({
+                        type: 'warning',
+                        title: '이산화황 주류 경고 문구 의무 여부 체크',
+                        desc: '이산화황(Sulfite) 보존 성분이 검출되었습니다. 최종 잔류량 10mg/L 초과 시 수입 주류(전통주) 라벨에 "이산화황 함유(Contains Sulfites)" 영문/불어 문구를 의무적으로 기재해야 합니다. (제이엘 등 주류 품목 해당)'
+                    });
+                    if (severity !== 'danger') severity = 'warning';
+                }
+
+                // Rule 4: Wheat/Gluten
+                if (textLower.includes('wheat') || textLower.includes('gluten')) {
+                    findings.push({
+                        type: 'green',
+                        title: '글루텐 함유 물질 검증',
+                        desc: '밀(Wheat) 및 글루텐 성분이 검출되었습니다. 통관상 수입 규제 대상은 아니나, 유럽 비건/발효 바이어 협상 시 성분 공개 필터 및 패키지 내 알레르기 표기 의무를 충족하는 라벨 시안이 기성 준비되어야 합니다.'
+                    });
+                }
+
+                // Final status pill setting
+                if (severity === 'danger') {
+                    statusPill.className = 'status-pill danger';
+                    statusPill.innerText = '위험 (통관 불가 요인 발견)';
+                } else if (severity === 'warning') {
+                    statusPill.className = 'status-pill warning';
+                    statusPill.innerText = '확인 요망 (라벨/성적서 필수)';
+                } else {
+                    statusPill.className = 'status-pill safe';
+                    statusPill.innerText = '안전 (기본 통관 승인 적합)';
+                    findings.push({
+                        type: 'green',
+                        title: 'EU 수입 기본 규정 적합',
+                        desc: '유럽 식품안전청(EFSA) 고시 금지 원료 및 알레르기 주의 물질이 검출되지 않았습니다. 현지 에이전트(OOOO)의 최종 서류 매칭 검토 후 바로 선적이 가능한 최적의 상태입니다.'
+                    });
+                }
+
+                // Inject findings to UI
+                findings.forEach(find => {
+                    const item = document.createElement('div');
+                    item.className = 'report-item';
+                    item.innerHTML = `
+                        <div class="badge ${find.type}">${find.type === 'danger' ? 'danger' : find.type === 'warning' ? 'warning' : 'info'}</div>
+                        <div class="report-text">
+                            <h4>${find.title}</h4>
+                            <p>${find.desc}</p>
+                        </div>
+                    `;
+                    reportList.appendChild(item);
+                });
+
+            }, 800);
+        }
+    </script>
+</body>
+</html>

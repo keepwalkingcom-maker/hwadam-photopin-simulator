@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 NEXT K-FOOD 실시간 협상 트래커 대시보드</title>
+    <!-- Google Font (Outfit & Gmarket Sans equivalent) -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: rgba(22, 27, 34, 0.7);
+            --panel-border: rgba(48, 54, 61, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --accent-color: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.35);
+            --green: #3fb950;
+            --green-glow: rgba(63, 185, 80, 0.25);
+            --yellow: #d29922;
+            --yellow-glow: rgba(210, 153, 34, 0.25);
+            --red: #f85149;
+            --red-glow: rgba(248, 81, 73, 0.25);
+            --card-lead: #388bfd;
+            --card-sample: #bc8cff;
+            --card-meeting: #ff7b72;
+            --card-feedback: #79c0ff;
+            --card-contract: #56d364;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.4) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(88, 166, 255, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b949e;
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 16px;
+        }
+
+        .logo-area h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #58a6ff, #56d364);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-area p {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 139, 253, 0.1);
+            border: 1px solid rgba(56, 139, 253, 0.3);
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 var(--green-glow);
+            animation: pulse 1.6s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 8px rgba(63, 185, 80, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(63, 185, 80, 0);
+            }
+        }
+
+        /* KPI Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .stat-card .title {
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 8px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .stat-card .value span {
+            font-size: 14px;
+            color: var(--text-sub);
+            font-weight: 400;
+        }
+
+        .stat-card .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #21262d;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stat-card .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), #56d364);
+            border-radius: 2px;
+        }
+
+        /* Main Workspace layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Pipeline Columns styling */
+        .pipeline-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .pipeline-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            min-height: 480px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .pipeline-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .pipeline-col {
+            background: rgba(22, 27, 34, 0.4);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 160px;
+        }
+
+        .col-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .col-header.lead { background: rgba(56, 139, 253, 0.15); color: var(--card-lead); }
+        .col-header.sample { background: rgba(188, 140, 255, 0.15); color: var(--card-sample); }
+        .col-header.meeting { background: rgba(255, 123, 114, 0.15); color: var(--card-meeting); }
+        .col-header.feedback { background: rgba(121, 192, 255, 0.15); color: var(--card-feedback); }
+        .col-header.contract { background: rgba(86, 211, 100, 0.15); color: var(--card-contract); }
+
+        .col-count {
+            background: rgba(240, 246, 242, 0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+            min-height: 400px;
+        }
+
+        /* Buyer Card style */
+        .buyer-card {
+            background: #161b22;
+            border: 1px solid var(--panel-border);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .buyer-card:hover {
+            border-color: #8b949e;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .buyer-card.c-lead { border-left-color: var(--card-lead); }
+        .buyer-card.c-sample { border-left-color: var(--card-sample); }
+        .buyer-card.c-meeting { border-left-color: var(--card-meeting); }
+        .buyer-card.c-feedback { border-left-color: var(--card-feedback); }
+        .buyer-card.c-contract { border-left-color: var(--card-contract); }
+
+        .buyer-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .buyer-card .country {
+            font-size: 11px;
+            color: var(--text-sub);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .buyer-card .tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #21262d;
+            color: var(--text-main);
+            display: inline-block;
+        }
+
+        /* Sidebar Panels style */
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .side-card {
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .side-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* AI Customs List */
+        .customs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .customs-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .customs-item:hover {
+            border-color: var(--accent-color);
+        }
+
+        .customs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .customs-header .p-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .indicator.green { background-color: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+        .indicator.yellow { background-color: var(--yellow); box-shadow: 0 0 8px var(--yellow-glow); }
+        .indicator.red { background-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+
+        .customs-detail {
+            font-size: 11px;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+
+        /* Simulation Buttons style */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), #0969da);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        /* Chart Area */
+        .chart-container {
+            width: 100%;
+            height: 180px;
+            position: relative;
+        }
+
+        /* Modal Dialog */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #161b22;
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 580px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transform: scale(0.95);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal.open .modal-content {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .modal-title h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .modal-title p {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            color: var(--text-main);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: #21262d;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #30363d;
+        }
+
+        /* Live Video Call Sim Overlay */
+        .video-call-overlay {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: white;
+            flex-direction: column;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100% - 100px);
+            background: #111;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+        }
+
+        .video-feed {
+            position: relative;
+            background: #222;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+        }
+
+        .video-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+        }
+
+        .feed-label {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .call-controls {
+            height: 100px;
+            background: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            border-top: 1px solid #222;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .control-btn.mute { background: #30363d; }
+        .control-btn.mute:hover { background: #484f58; }
+        .control-btn.hangup { background: var(--red); }
+        .control-btn.hangup:hover { background: #da3633; transform: scale(1.05); }
+
+        .call-info-floating {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .call-info-floating h4 { font-size: 14px; margin-bottom: 4px; }
+        .call-info-floating p { font-size: 11px; color: var(--text-sub); }
+    </style>
+</head>
+<body>
+    <div class="glass-panel" style="margin-bottom: 24px;">
+        <header>
+            <div class="logo-area">
+                <h1>2026 NEXT K-FOOD 실시간 협상 트래커</h1>
+                <p>유럽 권역 바이어 발굴 및 상품설명회 대행 과업 현황판 (수행사: 전담 TF & 에이전트 OOOO)</p>
+            </div>
+            <div class="status-badge">
+                <div class="pulse-dot"></div>
+                <span>aT 실시간 연동 중</span>
+            </div>
+        </header>
+
+        <!-- KPI Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="title">바이어 피칭 목록 확보</div>
+                <div class="value">45 <span>/ 45개사</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="title">바이어 상담 건수</div>
+                <div class="value">36 <span>/ 36건</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="title">B2B 상품설명회</div>
+                <div class="value">2 <span>/ 2회</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="title">체계적 샘플 테스트</div>
+                <div class="value">12 <span>/ 10개사</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="title">견적요청 (RFQ)</div>
+                <div class="value">6 <span>/ 5건</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="stat-card" style="border-color: var(--green);">
+                <div class="title" style="color: var(--green);">수출계약 및 MOU</div>
+                <div class="value" style="color: var(--green);">2 <span>/ 1건</span></div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 100%; background: var(--green);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="main-layout">
+            
+            <!-- Left: Pipeline Columns -->
+            <div class="pipeline-section">
+                <div class="section-header">
+                    <h2>바이어 협상 파이프라인 (B2B Pipeline)</h2>
+                    <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 11px;" onclick="openModal('add')">+ 바이어 등록</button>
+                </div>
+                
+                <div class="pipeline-board">
+                    <!-- Column 1: Leads -->
+                    <div class="pipeline-col">
+                        <div class="col-header lead">
+                            <span>Leads (발굴)</span>
+                            <span class="col-count" id="count-lead">9</span>
+                        </div>
+                        <div class="card-list" id="col-lead">
+                            <!-- JS will inject cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Sample Sent -->
+                    <div class="pipeline-col">
+                        <div class="col-header sample">
+                            <span>Sample Sent</span>
+                            <span class="col-count" id="count-sample">12</span>
+                        </div>
+                        <div class="card-list" id="col-sample">
+                            <!-- JS will inject cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Meeting -->
+                    <div class="pipeline-col">
+                        <div class="col-header meeting">
+                            <span>Meeting (상담)</span>
+                            <span class="col-count" id="count-meeting">16</span>
+                        </div>
+                        <div class="card-list" id="col-meeting">
+                            <!-- JS will inject cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 4: Feedback -->
+                    <div class="pipeline-col">
+                        <div class="col-header feedback">
+                            <span>Feedback</span>
+                            <span class="col-count" id="count-feedback">6</span>
+                        </div>
+                        <div class="card-list" id="col-feedback">
+                            <!-- JS will inject cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 5: Contract -->
+                    <div class="pipeline-col">
+                        <div class="col-header contract">
+                            <span>Contract (체결)</span>
+                            <span class="col-count" id="count-contract">2</span>
+                        </div>
+                        <div class="card-list" id="col-contract">
+                            <!-- JS will inject cards -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Sidebar Panels -->
+            <div class="sidebar-section">
+                
+                <!-- Side Panel 1: AI Customs Screening -->
+                <div class="side-card">
+                    <h3>
+                        <span>AI 통관 검역 스크리닝 (실시간)</span>
+                        <span style="font-size: 11px; color: var(--text-sub); font-weight: normal;">EFSA 기준</span>
+                    </h3>
+                    <div class="customs-list">
+                        <div class="customs-item">
+                            <div class="customs-header">
+                                <span class="p-name">비건 발효소스 (푸드베리)</span>
+                                <div class="indicator green"></div>
+                            </div>
+                            <div class="customs-detail">EU 기준 동물성 식품성분 불포함 검증. 보존료(솔빈산 등) 규격치 이하 통과.</div>
+                        </div>
+                        <div class="customs-item">
+                            <div class="customs-header">
+                                <span class="p-name">냉동 김밥 (밭)</span>
+                                <div class="indicator yellow"></div>
+                            </div>
+                            <div class="customs-detail">난류/우유 유입 가능성 라벨링 의무 사항 스크리닝. 포장재 친환경 적합성 확보 필요.</div>
+                        </div>
+                        <div class="customs-item">
+                            <div class="customs-header">
+                                <span class="p-name">증류 전통주 (제이엘)</span>
+                                <div class="indicator green"></div>
+                            </div>
+                            <div class="customs-detail">에탄올 농도 및 알레르기(이산화황) 한도 적합. 수입 라벨 가안 한글/불어 대조 완료.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side Panel 2: Live Tasting Call Sim -->
+                <div class="side-card">
+                    <h3>생산자 3자 라이브 품평회</h3>
+                    <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.4;">
+                        바이어와 상담 중 국내 영산 농가/수출업체와의 실시간 어학·기술적 화상 연결(3자 대면)을 지원합니다.
+                    </p>
+                    <button class="btn-primary" onclick="startCallSim()">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2zm11.5 5.175 3.5 1.556V4.269l-3.5 1.556zM2 4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7.5a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z"/>
+                        </svg>
+                        생산자 화상 통화 데모 연결
+                    </button>
+                </div>
+
+                <!-- Side Panel 3: Chart Analytics -->
+                <div class="side-card">
+                    <h3>바이어 테스트 피드백 통계</h3>
+                    <div class="chart-container">
+                        <canvas id="feedbackChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal: View/Add Buyer Detail -->
+    <div class="modal" id="buyerModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-title">
+                <h3 id="modal-title-text">바이어 상세 정보</h3>
+                <p id="modal-subtitle-text">상담 현황 및 회의록 열람</p>
+            </div>
+            
+            <input type="hidden" id="modal-card-id">
+            <div class="form-group">
+                <label for="m-name">바이어(유통사) 명칭</label>
+                <input type="text" id="m-name" placeholder="예: Tang Frères">
+            </div>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label for="m-country">국가 / 도시</label>
+                    <input type="text" id="m-country" placeholder="예: 프랑스 파리">
+                </div>
+                <div>
+                    <label for="m-channel">유통 채널 구분</label>
+                    <select id="m-channel">
+                        <option value="대형유통">대형유통</option>
+                        <option value="아시안마트">아시안마트</option>
+                        <option value="HORECA">HORECA</option>
+                        <option value="수입벤더">수입벤더</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="m-matching">매칭 K-Food 제품</label>
+                <input type="text" id="m-matching" placeholder="예: 냉동 김밥, 증류 전통주">
+            </div>
+            <div class="form-group">
+                <label for="m-notes">상담 회의록 및 후속 조치 계획</label>
+                <textarea id="m-notes" placeholder="상담 및 피칭 회의록을 입력하세요."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="m-status">협상 단계 (Pipeline)</label>
+                <select id="m-status">
+                    <option value="lead">Leads (발굴 완료)</option>
+                    <option value="sample">Sample Sent (샘플 분석)</option>
+                    <option value="meeting">Meeting (1:1 상담진행)</option>
+                    <option value="feedback">Feedback (반응 취합)</option>
+                    <option value="contract">Contract (MOU/계약체결)</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">취소</button>
+                <button class="btn-primary" style="width: auto;" onclick="saveCard()">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Call Simulation Overlay Screen -->
+    <div class="video-call-overlay" id="callOverlay">
+        <div class="call-info-floating">
+            <h4 id="call-buyer-name">Tang Frères 바이어 상담 중</h4>
+            <p>수수료 및 포장재 스펙 합의 도달</p>
+        </div>
+        <div class="video-grid">
+            <div class="video-feed">
+                <!-- Simulation image representing buyer -->
+                <svg width="60" height="60" fill="currentColor" viewBox="0 0 16 16" style="color: #666; position: absolute; z-index: 1;">
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                </svg>
+                <div style="background: rgba(255,255,255,0.05); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #555;">유럽 바이어 MD 피드백 (파리 현지 연결)</div>
+                <div class="feed-label">바이어: Tang Frères MD (Marc Dupont)</div>
+            </div>
+            <div class="video-feed">
+                <!-- Simulation image representing Korean farmer/producer -->
+                <svg width="60" height="60" fill="currentColor" viewBox="0 0 16 16" style="color: #666; position: absolute; z-index: 1;">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                </svg>
+                <div style="background: rgba(86, 211, 100, 0.05); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #555;">생산 농가/제조사 실시간 화상 참여</div>
+                <div class="feed-label">생산자: 한국제다 현지 공장장 (화상 3자 대면)</div>
+            </div>
+        </div>
+        <div class="call-controls">
+            <button class="control-btn mute" onclick="alert('마이크 음소거 처리')">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5"/>
+                </svg>
+            </button>
+            <button class="control-btn hangup" onclick="endCallSim()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877zM22.001 8c0-4.418-3.582-8-8-8V2c3.314 0 6 2.686 6 6z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Sample Data for Buyers
+        let buyers = [
+            { id: 1, name: "Tang Freres", country: "프랑스 파리", channel: "아시안마트", matching: "비건 발효소스, 우리술", status: "meeting", notes: "맛과 유기농 성분에 관심이 큼. 9월 파리 현지 찾아가는 설명회 참석 희망. MOQ 1,000병선 협의 중." },
+            { id: 2, name: "Kim's Asia GmbH", country: "독일 뒤셀도르프", channel: "수입벤더", matching: "냉동 김밥, 핫도그", status: "sample", notes: "샘플 검토 중. 독일 영하 보관 물류 조건 확인 요청함." },
+            { id: 3, name: "Wah Nam Hong", country: "네덜란드 로테르담", channel: "아시안마트", matching: "우리술, 냉동 김밥", status: "contract", notes: "B2B MOU 체결 완료. 10월 단기 쇼룸 세팅 합의 완료. 계약서 사본 확보." },
+            { id: 4, name: "Go Asia Berlin", country: "독일 베를린", channel: "아시안마트", matching: "비건 가공식품", status: "lead", notes: "1차 피칭 완료. 웰빙 식품 담당 MD 메일 답변 대기 중." },
+            { id: 5, name: "Albert Heijn", country: "네덜란드 암스테르담", channel: "대형유통", matching: "냉동식품(양념치킨)", status: "meeting", notes: "현지 통관 규격 사전 확인 완료. 테스트 오더 의향 타진 중." },
+            { id: 6, name: "SODIPA Paris", country: "프랑스 리옹", channel: "수입벤더", matching: "비건 소스류", status: "feedback", notes: "샘플테스트 만족도 점수 8.5/10 기록. 용기 디자인 수정(불어 표시) 요청." },
+            { id: 7, name: "Oseyo London", country: "영국 런던", channel: "아시안마트", matching: "우리술, 냉동 김밥", status: "contract", notes: "수출 계약 성사. 초도 물량 20ft 컨테이너 MOQ 합의 및 견적서 제출 완료." },
+            { id: 8, name: "Oriental Market Spain", country: "스페인 마드리드", channel: "수입벤더", matching: "우리술, 유자차", status: "sample", notes: "유자차 성분표 스크리닝 진행 중. 샘플 발송 송장 전달 완료." }
+        ];
+
+        // Render Cards to Board
+        function renderBoard() {
+            // Clear lists
+            document.querySelectorAll('.card-list').forEach(list => list.innerHTML = '');
+            
+            // Counts
+            let counts = { lead: 0, sample: 0, meeting: 0, feedback: 0, contract: 0 };
+            
+            buyers.forEach(buyer => {
+                counts[buyer.status]++;
+                
+                const card = document.createElement('div');
+                card.className = `buyer-card c-${buyer.status}`;
+                card.onclick = () => openModal('view', buyer.id);
+                card.innerHTML = `
+                    <h4>${buyer.name}</h4>
+                    <div class="country">
+                        <span>${buyer.country}</span>
+                        <span class="tag">${buyer.channel}</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--accent-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${buyer.matching}
+                    </div>
+                `;
+                
+                document.getElementById(`col-${buyer.status}`).appendChild(card);
+            });
+            
+            // Update column headers
+            Object.keys(counts).forEach(status => {
+                document.getElementById(`count-${status}`).innerText = counts[status];
+            });
+        }
+
+        // Modal Handlers
+        function openModal(mode, id) {
+            const modal = document.getElementById('buyerModal');
+            modal.classList.add('open');
+            
+            if (mode === 'add') {
+                document.getElementById('modal-title-text').innerText = "신규 바이어 등록";
+                document.getElementById('modal-subtitle-text').innerText = "파이프라인 관리용 바이어 추가";
+                document.getElementById('modal-card-id').value = '';
+                document.getElementById('m-name').value = '';
+                document.getElementById('m-country').value = '';
+                document.getElementById('m-matching').value = '';
+                document.getElementById('m-notes').value = '';
+                document.getElementById('m-channel').value = '대형유통';
+                document.getElementById('m-status').value = 'lead';
+            } else if (mode === 'view') {
+                const buyer = buyers.find(b => b.id === id);
+                if (buyer) {
+                    document.getElementById('modal-title-text').innerText = buyer.name;
+                    document.getElementById('modal-subtitle-text').innerText = "상담 이력 및 진행 상황";
+                    document.getElementById('modal-card-id').value = buyer.id;
+                    document.getElementById('m-name').value = buyer.name;
+                    document.getElementById('m-country').value = buyer.country;
+                    document.getElementById('m-matching').value = buyer.matching;
+                    document.getElementById('m-notes').value = buyer.notes;
+                    document.getElementById('m-channel').value = buyer.channel;
+                    document.getElementById('m-status').value = buyer.status;
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('buyerModal').classList.remove('open');
+        }
+
+        function saveCard() {
+            const idVal = document.getElementById('modal-card-id').value;
+            const name = document.getElementById('m-name').value;
+            const country = document.getElementById('m-country').value;
+            const matching = document.getElementById('m-matching').value;
+            const notes = document.getElementById('m-notes').value;
+            const channel = document.getElementById('m-channel').value;
+            const status = document.getElementById('m-status').value;
+            
+            if (!name) {
+                alert("바이어 명칭은 필수 입력 사항입니다.");
+                return;
+            }
+            
+            if (idVal) {
+                // Update
+                const buyer = buyers.find(b => b.id === parseInt(idVal));
+                if (buyer) {
+                    buyer.name = name;
+                    buyer.country = country;
+                    buyer.matching = matching;
+                    buyer.notes = notes;
+                    buyer.channel = channel;
+                    buyer.status = status;
+                }
+            } else {
+                // Create
+                const newId = buyers.length > 0 ? Math.max(...buyers.map(b => b.id)) + 1 : 1;
+                buyers.push({ id: newId, name, country, channel, matching, status, notes });
+            }
+            
+            closeModal();
+            renderBoard();
+            updateChart();
+        }
+
+        // Live Call Simulation Handlers
+        function startCallSim() {
+            document.getElementById('callOverlay').style.display = 'flex';
+        }
+
+        function endCallSim() {
+            document.getElementById('callOverlay').style.display = 'none';
+        }
+
+        // Render Feedback Chart (Chart.js)
+        let feedbackChart;
+        function renderChart() {
+            const ctx = document.getElementById('feedbackChart').getContext('2d');
+            feedbackChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['품질/맛', '디자인', '가격', '수입의향'],
+                    datasets: [{
+                        label: '바이어 만족도 (10점 만점)',
+                        data: [8.8, 7.5, 6.9, 8.2],
+                        backgroundColor: [
+                            'rgba(88, 166, 255, 0.6)',
+                            'rgba(188, 140, 255, 0.6)',
+                            'rgba(255, 123, 114, 0.6)',
+                            'rgba(86, 211, 100, 0.6)'
+                        ],
+                        borderColor: [
+                            'var(--accent-color)',
+                            'var(--card-sample)',
+                            'var(--card-meeting)',
+                            'var(--card-contract)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 10,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#8b949e', font: { size: 9 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e', font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (feedbackChart) {
+                feedbackChart.update();
+            }
+        }
+
+        // Init
+        window.onload = function() {
+            renderBoard();
+            renderChart();
+        }
+    </script>
+</body>
+</html>
