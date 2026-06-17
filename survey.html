@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXT K-FOOD 바이어 피드백 설문</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .phone-container {
+            width: 100%;
+            max-width: 412px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        /* 가상 상태 표시줄 */
+        .status-bar {
+            background-color: #0c3578;
+            color: #ffffff;
+            padding: 6px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        /* 헤더 영역 */
+        header {
+            background-color: #0c3578;
+            color: #ffffff;
+            padding: 24px 20px;
+            text-align: center;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        header p {
+            font-size: 12px;
+            color: #c8dcff;
+        }
+        /* 콘텐츠 영역 */
+        .content {
+            padding: 20px;
+            flex: 1;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e0e0e0;
+        }
+        .question-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0c3578;
+            margin-bottom: 12px;
+        }
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .option-item input[type="radio"] {
+            margin-right: 8px;
+            accent-color: #0c3578;
+            width: 16px;
+            height: 16px;
+        }
+        .textarea-input {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+            font-size: 13px;
+            background-color: #f9f9f9;
+        }
+        .textarea-input:focus {
+            outline: none;
+            border-color: #0c3578;
+            background-color: #ffffff;
+        }
+        /* 버튼 */
+        .submit-btn {
+            background-color: #0c3578;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .submit-btn:hover {
+            background-color: #092a58;
+        }
+        /* 모달 레이아웃 */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            width: 85%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-icon {
+            font-size: 40px;
+            color: #0c3578;
+            margin-bottom: 12px;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .modal-close-btn {
+            background-color: #0c3578;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <!-- 가상 상태 바 -->
+        <div class="status-bar">
+            <span>📶 LTE</span>
+            <span>10:00 AM</span>
+            <span>🔋 98%</span>
+        </div>
+        
+        <!-- 헤더 -->
+        <header>
+            <h1>NEXT K-FOOD 바이어 피드백</h1>
+            <p>유럽 샘플 테스트 바이어 피드백 수집 및 분석용 설문지</p>
+        </header>
+        
+        <!-- 본문 -->
+        <div class="content">
+            <form id="feedbackForm" onsubmit="handleSubmit(event)">
+                <!-- Q1 -->
+                <div class="card">
+                    <div class="question-title">1. 맛과 품질 만족도 (Taste & Quality)</div>
+                    <div class="options-group">
+                        <label class="option-item"><input type="radio" name="q1" value="5" checked> 매우 만족 (Highly Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q1" value="4"> 만족 (Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q1" value="3"> 보통 (Neutral)</label>
+                        <label class="option-item"><input type="radio" name="q1" value="2"> 불만족 (Dissatisfied)</label>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="card">
+                    <div class="question-title">2. 제품 패키지 및 디자인 만족도 (Packaging)</div>
+                    <div class="options-group">
+                        <label class="option-item"><input type="radio" name="q2" value="5"> 매우 만족 (Highly Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q2" value="4" checked> 만족 (Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q2" value="3"> 보통 (Neutral)</label>
+                        <label class="option-item"><input type="radio" name="q2" value="2"> 불만족 (Dissatisfied)</label>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="card">
+                    <div class="question-title">3. 수입 단가 및 MOQ 타당성 (Pricing & MOQ)</div>
+                    <div class="options-group">
+                        <label class="option-item"><input type="radio" name="q3" value="5"> 매우 만족 (Highly Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q3" value="4"> 만족 (Satisfied)</label>
+                        <label class="option-item"><input type="radio" name="q3" value="3" checked> 보통 (Neutral)</label>
+                        <label class="option-item"><input type="radio" name="q3" value="2"> 불만족 (Dissatisfied)</label>
+                    </div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="card">
+                    <div class="question-title">4. 향후 수입 및 계약 추진 의향 (Import Intention)</div>
+                    <div class="options-group">
+                        <label class="option-item"><input type="radio" name="q4" value="5" checked> 매우 의향 있음 (Highly Intended)</label>
+                        <label class="option-item"><input type="radio" name="q4" value="4"> 의향 있음 (Intended)</label>
+                        <label class="option-item"><input type="radio" name="q4" value="3"> 보통 (Neutral)</label>
+                        <label class="option-item"><input type="radio" name="q4" value="2"> 없음 (No Intention)</label>
+                    </div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="card">
+                    <div class="question-title">5. 유럽 수입 애로 및 기타 건의 (Comments)</div>
+                    <textarea class="textarea-input" id="comments" placeholder="수입 및 통관 과정에서의 애로사항이나 건의사항을 기재해주시기 바람.">유럽 기준 검역 증명서 관련 세부 성적서 추가 전송 바람.</textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">제출 완료 (Submit)</button>
+            </form>
+        </div>
+        
+        <!-- 가상 홈 바 -->
+        <div style="text-align: center; padding-bottom: 10px; color: #ccc; font-size: 8px;">
+            ━━━━━━━━
+        </div>
+
+        <!-- 모달 팝업 -->
+        <div class="modal-overlay" id="successModal">
+            <div class="modal-card">
+                <div class="modal-icon">✓</div>
+                <div class="modal-title">전송 성공함</div>
+                <div class="modal-desc">피드백이 성공적으로 전송 완료됨.</div>
+                <button class="modal-close-btn" onclick="closeModal()">확인 (Confirm)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleSubmit(event) {
+            event.preventDefault();
+            document.getElementById('successModal').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
